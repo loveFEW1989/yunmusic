@@ -1,2 +1,13 @@
-<!--miniprogram/pages/playlist/playlist.wxml-->
-<text>miniprogram/pages/playlist/playlist.wxml</text>
+<swiper indicator-dots="{{true}}" autoplay="{{true}}" indicator-color="#fff" indicator-active-color="#d43c33" interval="2000" duration="1000"  class="">
+  <block wx:for="{{swiperImgs}}" wx:key="url">
+    <swiper-item class="" item-id="">
+      <image class="img" src="{{item.url}}" mode="widthFix"></image>
+    </swiper-item>
+  </block>
+</swiper>
+
+<view class="playlist-container">
+  <block wx:for="{{playlist}}" wx:key="_id">
+    <v-playlist playlist="{{item}}"></v-playlist>
+  </block>
+</view>

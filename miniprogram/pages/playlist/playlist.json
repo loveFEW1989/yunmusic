@@ -1,3 +1,6 @@
 {
-  "usingComponents": {}
+  "usingComponents": {
+    "v-playlist":"/components/playlist/playlist"
+  },
+  "enablePullDownRefresh":true
 }
