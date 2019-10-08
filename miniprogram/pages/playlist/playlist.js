@@ -17,16 +17,15 @@ Page({
           url: 'http://p1.music.126.net/Yo-FjrJTQ9clkDkuUCTtUg==/109951164169441928.jpg',
         }
         ],
-    playlist:[
-
-    ]    
+    playlist:[],
+    loading: false    
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
-  this._getList()
+  this.getList()
   },
 
   /**
@@ -62,35 +61,75 @@ Page({
    */
   onPullDownRefresh: function () {
    this.setData({playlist:[]})
-   this._getList()
+   this.getList()
   },
 
   /**
    * 页面上拉触底事件的处理函数
    */
   onReachBottom: function () {
-  this._getList()
+    if(this.data.loading) {
+      this.getList()
+    }
+   
   },
-  _getList() {
-    // 调用云函数获取云数据库中的歌单
+  getList() {
+   console.log(this.data.loading)
     wx.showLoading()
-    wx.cloud.callFunction({
-      name:'music',
-      data: {
-        start:this.data.playlist.length,
-        count:MAX_LIMIT
-      }
-    }).then((res)=> {
-      wx.hideLoading()
-      console.log(res)
-      this.setData({playlist:this.data.playlist.concat(res.result.data)})
-    }).catch(err=> {
-      console.log(err)
-      wx.stopPullDownRefresh()
-      wx.hideLoading()
-    })
+    this.locked()
+    this._getList()
+    
+    
   },
+   // 调用云函数获取云数据库中的歌单
+_getList() {
+  wx.cloud.callFunction({
+    name:'music',
+    data: {
+      start:this.data.playlist.length,
+      count:MAX_LIMIT
+    }
+  }).then((res)=> {
+    wx.hideLoading()
+    wx.stopPullDownRefresh()
+    console.log(res)
+    if(this.hasmore(res.result.data)) {
+      this.setMoreData(res.result.data)
+    } else {
+      this.unlocked()
+      wx.showToast({
+        title: '没有更多数据...'
+      })
+      
+    }
+    
+  }).catch(err=> {
+    console.log(err)
+    this.unlocked()
+    wx.stopPullDownRefresh()
+    wx.hideLoading()
+  })
+},  
+// 获取新的歌单数据
+setMoreData(data) {
+  const tempArray = this.data.playlist.concat(data)
+  this.setData({playlist:  tempArray})
+},
 
+// 上锁
+locked() {
+  this.setData({loading: true})
+},
+// 解锁
+unlocked() {
+  this.setData({loading:false})
+},
+// 判断是否还有数据
+hasmore(data) {
+  return data.length>0 ?true : false 
+},
+
+    
   /**
    * 用户点击右上角分享
    */
