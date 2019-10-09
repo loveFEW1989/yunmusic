@@ -2,7 +2,9 @@
   "pages": [
     "pages/playlist/playlist",
     "pages/blog/blog",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/musiclist/musiclist",
+    "pages/player/player"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",
@@ -11,28 +13,29 @@
     "navigationBarTitleText": "轻听music",
     "navigationBarTextStyle": "white"
   },
+  "requiredBackgroundModes": ["audio"],
   "sitemapLocation": "sitemap.json",
   "tabBar": {
     "color": "#474747",
     "selectedColor": "#d43c43",
-    "list":[
+    "list": [
       {
-        "pagePath":"pages/playlist/playlist",
-        "iconPath":"images/music.png",
-        "selectedIconPath":"images/music-actived.png",
-        "text":"音乐"
+        "pagePath": "pages/playlist/playlist",
+        "iconPath": "images/music.png",
+        "selectedIconPath": "images/music-actived.png",
+        "text": "音乐"
       },
       {
-        "pagePath":"pages/blog/blog",
-        "iconPath":"images/blog.png",
-        "selectedIconPath":"images/blog-actived.png",
-        "text":"博客"
+        "pagePath": "pages/blog/blog",
+        "iconPath": "images/blog.png",
+        "selectedIconPath": "images/blog-actived.png",
+        "text": "博客"
       },
       {
-        "pagePath":"pages/profile/profile",
-        "text":"我的",
-        "iconPath":"images/profile.png",
-        "selectedIconPath":"images/profile-actived.png"
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/profile.png",
+        "selectedIconPath": "images/profile-actived.png"
       }
     ]
   }

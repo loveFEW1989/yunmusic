@@ -1,6 +1,6 @@
 # yunmusic
 小程序云开发-听歌产品
-# 知识点：
+# 难点：
 ## 首页
 
 ### 1,把长串数字转换为 **.**万 或 **.**亿的格式
@@ -46,7 +46,7 @@ methods: {
 ```
 ### 2，从云数据库获取歌单数据 并解决歌单数据去重 突破歌单数据限制
 ```
-云函数getList10  >>>> index.js:
+云函数getlist  >>>> index.js:
 const cloud = require('wx-server-sdk')
 <!-- 初始化云函数 -->
 cloud.init()
@@ -132,17 +132,153 @@ return newData.length
 
 云函数music ---- index.js
 ```
+const cloud = require('wx-server-sdk')
+cloud.init({
+  env:'你的环境id'
+})
+
+const db = cloud.database()
+exports.main = async(event,context) => {
+  return await db.collection('playlist')
+  .skip(event.start)
+  .limit(event.count)
+  .orderBy('createTime','desc')
+  .get()
+  .then((res) => {
+    return res
+  })
+}
 
 
 ```
 
 page页面---playlist.js
 
-```
+wx.stopPullDownRefresh() 停止下拉刷新的动作
+在playlist.json中设置  允许下拉刷新：
+"enablePullDownRefresh": true
 
 ```
-playlist.json 允许下拉刷新
-wx.stopPullDownRefresh() 停止下拉刷新的动作
+const MAX_LIMIT = 15
+data: {
+   playlist:[], // 歌单
+   loading: false   // 加锁 解锁
+},
+
+onLoad :function(options) {
+  this.getList()
+},
+getList() {
+  wx.showLoading()
+  this.locked()
+  this._getList()
+},
+_getList() {
+  wx.cloud.callFunction({
+    name: 'music',
+    data: {
+      start: this.properties.playlist.length,
+      count:MAX_LIMIT,
+    },
+    $url:'playlist'
+
+  }).then((res) => {
+    wx.hideLoading()
+    wx.stopPullDownRefresh()
+    if(this.hasMore(res.result.data)) {
+      this.setMoreData(res.result.data)
+    } else {
+      this.unlocked()
+      wx.showLoading({
+        title: '没有更多数据了...'
+      })
+
+    }
+  }).catch(err=> {
+    this.unlocked()
+    wx.hideLoading()
+    wx.stopPullDownRefresh()
+  })
+},
+setMoreData(data) {
+   const tempArray = this.data.playlist.concat(data)
+   this.setData({playlist: tempArray})
+}
+<!-- 是否还有更多的数据 -->
+hasMore(data) {
+  return data.length >  0
+}
+<!-- 加锁 -->
+locked() {
+  this.setData({loading: true})
+}
+<!-- 解锁 -->
+unlocked() {
+  this.setData({loading: false})
+},
+
+<!-- 上拉触底事件 -->
+onReachBottom: function() {
+  if(this.data.loading) {
+    this.getList()
+  }
+}
+<!-- 下拉刷新 -->
+onPullDownRefresh: function() {
+  this.setData({playlist: []})
+  this.getList()
+}
+
+
 ```
-"enablePullDownRefresh": true
+
+
+
+### 云函数music路由改造
+
+```
+npm i --save tcb-router
+npm i --save request request-promise
+云函数music ----  index.js
+
+const cloud = require('wx-server-sdk')
+const TcbRouter = require('tcb-router')
+const rp = require('request-promise')
+const BASE_URL = 'http://musicapi.xiecheng.live'
+const db = cloud.database()
+cloud.init({env: '你的环境id'})
+
+<!-- 云函数入口函数 -->
+
+exports.main = async(cevent,context) => {
+  const app = new TcbRouter({event})
+  
+  <!-- 获取歌单列表 -->
+  app.router('playlist', async(ctx,next) => {
+    ctx.body = await db.collection('playlist')
+    .skip(event.start)
+    .limit(event.count)
+    .orderBy('createTime', 'desc')
+    .get()
+    .then((res) => {
+      return res
+    })
+  })
+  <!-- 获取歌单详情 -->
+  app.router('musiclist', async(ctx,next) => {
+  ctx.body = await rp(BASE_URL+'/playlist/detail?id='+parseInt(event.playlistId))
+  .then((res)=> {
+    return JSON.parse(res)
+  })
+   
+  })
+
+
+  return app.serve()
+}
+
+
+
+
+
 ```

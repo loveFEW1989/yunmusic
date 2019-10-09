@@ -24,6 +24,12 @@ Component({
    * 组件的方法列表
    */
   methods: {
+    goToMusicList(e) {
+      wx.navigateTo({
+        url: `../../pages/musiclist/musiclist?playlistId=${this.properties.playlist.id}`
+        
+      })
+    },
     // 播放数转换方法
     _transNumber(num,point) {
       let numStr = num.toString().split('.')[0]

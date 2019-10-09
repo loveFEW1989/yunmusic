@@ -87,7 +87,8 @@ _getList() {
     name:'music',
     data: {
       start:this.data.playlist.length,
-      count:MAX_LIMIT
+      count:MAX_LIMIT,
+      $url: 'playlist'
     }
   }).then((res)=> {
     wx.hideLoading()
