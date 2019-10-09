@@ -40,14 +40,25 @@ Component({
    */
   methods: {
    onChange(event) {
-     console.log(event)
+    
       // 拖动
       if (event.detail.source == 'touch') {
         this.data.progress = event.detail.x / (movableAreaWidth - movableViewWidth) * 100
         this.data.movableDis = event.detail.x
-        isMoving = true
-        // console.log('change', isMoving)
+        isMoving= true
       }
+   },
+  //  拖动停止时触发的事件
+   onTouchEnd() {
+   const currentFromat = this._timeFormat(Math.floor(backgroundAudioManager.currentTime))
+   this.setData({
+     progress:this.data.progress,
+     movableDis: this.data.movableDis,
+     ['showTime.currentTime']:currentFromat.min+':'+currentFromat.sec
+   })
+   console.log(this.data.progress)
+   backgroundAudioManager.seek(duration*this.data.progress/100)
+   isMoving = false
    },
   //  获取元素的宽度信息
   _getMovableDis() {
@@ -82,7 +93,7 @@ Component({
     })
     backgroundAudioManager.onCanplay(()=> {
       console.log('canplay')
-      console.log(backgroundAudioManager.duration)
+     
       if(typeof backgroundAudioManager.duration != 'undefined') {
         this._setTime()
       } else {
@@ -93,12 +104,28 @@ Component({
     })
 
     backgroundAudioManager.onTimeUpdate(()=> {
-      console.log('timeupdate...')
+      if(!isMoving) {
+        const currentTime = backgroundAudioManager.currentTime
+        const  duration = backgroundAudioManager.duration
+        const currentFormat = this._timeFormat(currentTime)
+        const sec = currentTime.toString().split('.')[0]
+        if(sec!==currentSec) {
+          this.setData({
+            ['showTime.currentTime']: `${currentFormat.min}:${currentFormat.sec}`,
+            movableDis: (movableAreaWidth-movableViewWidth)* currentTime / duration,
+            progress: (currentTime/duration)*100
+           }) 
+        }else {
+          currentSec = sec
+        }
+       
+      }
+     
     })
 
     backgroundAudioManager.onEnded(() => {
       console.log("onEnded")
-      
+      this.triggerEvent('musicEnd')
     })
 
   },
