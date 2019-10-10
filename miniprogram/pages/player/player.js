@@ -68,10 +68,28 @@ Page({
       this.setData({
         isplaying:true
       })
-    
+     //  加载歌词
+     wx.cloud.callFunction({
+      name: 'music',
+      data: {
+        $url: 'lyric',
+        musicId
+      }
+    }).then((res) => {
+      console.log(JSON.parse(res.result).lrc)
+      let lyric = '暂无歌词'
+      const lrc = JSON.parse(res.result).lrc
+      if(lrc) {
+        lyric = lrc.lyric
+      }
+      this.setData({
+        lyric
+      })
+    })
+
 
     }).catch(err=> {
-
+      
     })
   },
   // 上一曲

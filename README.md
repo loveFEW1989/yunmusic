@@ -282,3 +282,234 @@ exports.main = async(cevent,context) => {
 
 
 ```
+
+## 播放页面  
+<!-- page ----   player -->
+
+### 控制面板 实现 （播放歌曲 暂停 上一首 下一首）
+html文件：
+```
+<view class="control">
+    <text class="iconfont icon-shangyishoushangyige" bind:tap="onPrev"></text>
+    <text class="iconfont {{isPlaying?'icon-zanting1':'icon-bofang1'}}" bind:tap="togglePlaying"></text>
+    <text class="iconfont icon-xiayigexiayishou" bind:tap="onNext"></text>
+</view>
+
+```
+相关js文件：
+
+```
+<!-- 歌单内的歌曲信息列表 -->
+let musiclist = []
+// 正在播放歌曲的index
+let nowPlayingIndex = 0
+// 获取全局唯一的背景音频管理器
+const backgroundAudioManager = wx.getBackgroundAudioManager()
+
+data: {
+  picUrl: '',
+  isPlaying: false , // 是否正在播放
+  
+},
+onLoad: function(options) {
+  nowPlayingIndex = options.index
+  musiclist = music.wx.getStorageSync('musiclist')
+  this._loadMusicDetail(options.index)
+},
+_loadMusicDetail(musicId) {
+  let music = musiclist[nowPlayingIndex]
+  wx.setNavgationBarTitle({
+    title: music.name
+  })
+  this.setData({
+    picUrl: music.al.picUrl,
+    isPlaying: false
+  })
+  wx.showLoading({
+    title: '歌曲加载中...'
+  })
+  wx.cloud.callFunction({
+    name: 'music',
+    data: {
+      $url:'musicUrl',
+      musicId
+    }
+  }).then((res)=> {
+    let result = JSON.parse(res.result)
+    if(result.data[0].url == null) {
+      wx.showLoading({title:'该歌曲无播放权限'})
+      return 
+    }
+     backgroundAudioManager.src = result.data[0].url
+     backgroundAudioManager.title = music.name
+     backgroundAudioManager.coverImgUrl = music.al.picUrl
+     backgroundAudioManager.singer = music.ar[0].name
+     backgroundAudioManager.epname = music.al.name
+     this.setData({isPlaying: true})
+     wx.hideLoading()
+  })
+},
+<!-- 切换 播放/暂停 -->
+togglePlaying() {
+  if(this.data.Playing) {
+    backgroundAudioManager.pause()
+  } else {
+    backgroundAudioManager.play()
+  }
+  this.setData({
+    isPlaying: !this.data.isPlaying
+  })
+},
+
+<!-- 上一首 -->
+onPrev() {
+ nowPlayingIndex--
+ if(nowPlayingIndex< 0 ) {
+   nowPlayingIndex =musiclist.length-1
+ }
+ this._loadMusicDetail(musiclist[nowPlayingIndex].id)
+},
+<!-- 下一首 -->
+onNext() {
+ nowPlayingIndex++
+ if(nowPlayingIndex== musiclist.length) {
+   nowPlayingIndex = 0
+ }
+ this._loadMusicDetail(musiclist[nowPlayingIndex].id)
+}
+
+
+
+```
+
+
+### 进度条
+html:
+```
+ <movable-area class="movable-area">
+      <movable-view direction="horizontal" class="movable-view"
+        damping="1000" x="{{movableDis}}" bindchange="onChange"
+        bindtouchend="onTouchEnd"
+      />
+ </movable-area>
+<progress stroke-width="4" backgroundColor="#969696"
+    activeColor="#fff" percent="{{progress}}"></progress>
+
+```
+相关Js文件：
+
+let movableAreaWidth = 0 // 可拖动区域外部元素 也就是进度条的宽
+let movableViewWidth = 0 // 可拖动区域内部元素 也就是圆球的宽度
+const backgroundAM = wx.getBackgroundAudioManager()
+let currentSec = -1 //当前播放到多少秒
+let duration = 0 // 当前歌曲的总时长 单位是秒
+let isMoving = false //表示当前进度条是否在拖拽 用来解决 拖动与 updatetime冲突
+
+data : {
+  showTime: {
+    startTime: 00:00,
+    total: 00:00
+  },
+  movableDis: 0, //圆球拖动的距离
+  progress: 0 //进度条的进度  ?%
+},
+lifetimes: {
+  ready() {
+    this._getMovableDis() //取到进度条的宽 以及圆球的宽
+    this._bindBGMEvent()  //监听音乐 播放 暂停 停止 可以播放 等状态
+  }
+},
+methods: {
+  圆球开始拖动
+  onChange(event) {
+   if(event.detail.soure == 'touch') {
+     this.data.progress = event.detail.x/(movableAreaWidth-movableViewWidth)*100
+     this.data.movableDis = event.detail.x
+     isMoving = true
+   }
+  },
+  松开手指（圆球结束拖动）
+  onTouchEnd() {
+   <!-- 把当前歌曲正在播放的时间转换为xx:xx格式 -->
+   const startTimeFmt = this._timeFormat(Math.floor(backgroundAM.currentTime))
+   this.setData({
+     progress: this.data.progress,
+     movableDis: this.data.movableDis,
+     ['showTime.startTime']: startTimeFmt.min+':'+startTimeFmt.sec,
+     <!-- 跳转当前播放进度 -->
+     backgroundAM.seek(duration*this.data.progress/100)
+     isMoving = false
+     
+   })
+  },
+  _getMovableDis() {
+    const query = this.createSelectorQuery()
+    query.select('.movable-area').boundingClientRect()
+    query.select('.movable-view').boundingClientRect()
+    query.exec((rect)=> {
+      movableAreaWidth = rect[0].width
+      movableViewWidth = rect[1].width
+    })
+  },
+  _bindBGMEvent() {
+    backgroundAM.onCanplay(() => {
+      if(typeof backgroundAM.duration !='undefined') {
+        this._setTime()
+      } else {
+         setTimeout(()=> {
+           this._setTime()
+         },1000)
+      }
+    })
+    backgroundAM.onTimeUpdate(()=> {
+    if(!isMoving) {
+      const currentTime = backgroundAM.currentTime
+      const currentTimeFmt = this._timeFormat(currentTime)
+      const duration = backgroundAM.duration
+      const sec = currentTime.toString().split('.')[0]
+      if(sec !==currentSec) {
+       movableDis: (movableAreaWidth - movableViewWidth) * curentTime/duration,
+       progress: currentTime/duration *100,
+       ['showTime.startTime']: currentTimeFmt.min+':'+ currentTimeFmt.sec
+      }
+      currentSec = sec
+      
+    }
+    })
+    backgroundAM.onEnded(()=> {
+    <!-- 自动播放下一首 -->
+    this.triggerEvent('musicEnd')
+    })
+  },
+  <!-- 设置歌曲总时间  格式为 00:00 -->
+  _setTime() {
+    <!-- 当前歌曲总时长 以秒为单位 -->
+    duration = backgroundAM.duraiton
+    const durationFmt = this._timeFormat(duration)
+    this.setData({
+      ['showTime.totalTime']: `${durationFmt.min}:${durationFmt.sec}`
+    })
+  },
+  <!-- 格式化时间  最后的格式 00:00 -->
+  _timeFormat(time) {
+    const min = Math.floor(time/60)
+    const sec = Math.floor(time% 60)
+    return {
+      'min': this._parse0(min),
+      'sec': this._parse0(sec)
+    }
+  },
+  <!-- 补零  8 --》 08   -->
+  _parse0(time) {
+    return time<10 ? '0'+time : time
+  }
+}
+
+```
+
+
+
+
+```
+
+### 歌词显示
