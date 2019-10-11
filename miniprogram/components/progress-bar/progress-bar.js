@@ -115,8 +115,9 @@ Component({
             movableDis: (movableAreaWidth-movableViewWidth)* currentTime / duration,
             progress: (currentTime/duration)*100
            }) 
-        }else {
+        
           currentSec = sec
+          this.triggerEvent('timeUpdate',{currentTime})
         }
        
       }

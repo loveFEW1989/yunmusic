@@ -513,3 +513,126 @@ methods: {
 ```
 
 ### 歌词显示
+
+歌词组件lyric   >>>  lyric.js文件：
+
+```
+properties: {
+  isLyricShow: {
+    type: Boolean,
+    value: false
+  },
+  lyric: String // 接收父组件传来的歌词文件
+},
+<!-- 监听器 -->
+observers: {
+  lyric(lrc) {
+    <!-- 解析歌词 -->
+    this._parseLyric(lrc)
+  }
+},
+data: {
+  lrcList: [], //解析后的歌词组件
+  nowLyricIndex: 0, //当前正在播放的歌词索引
+  scrollTop: 0 //滚动区域滚动的高度
+},
+methods: {
+  _parseLyric(sLyric) {
+    <!-- 先让歌词文件换行显示 -->
+   let line  = sLyric.split('\n')
+   let _lrcList = []
+   line.forEach((elem)=> {
+     <!-- 前面的时间部分 -->
+     let time = elem.match(/\[(\d{2})(?:\.(\d{2,3}))?]/g)
+     if(time!==null) {
+       <!-- 后面的歌词部分 -->
+       let lrc = elem.split(time)[1]
+       
+       let timeReg = time[0].match(/(\d{2,}):(\d{2})(?:\.(\d{2,3}))?/)
+
+<!-- timeReg的结果  类似这样的集合，["00:00.000", "00", "00", "000", index: 1, input: "[00:00.000]", groups: undefined] -->
+       <!-- 把事件转换为秒 -->
+       let time2Sec = parseInt(timeReg[1]*60)+parseInt(timeReg[2])+parseInt(timeReg[3])/1000
+       _lrcList.push({
+         lrc,
+         time: time2Sec
+       })
+     }
+   })
+   this.setData({
+     lrcList: _lrcList
+   })
+  }
+}
+
+
+
+
+
+```
+
+
+### 歌词 与 播放进度的联动
+
+父组件还可以通过 this.selectComponent 方法获取子组件实例对象，这样就可以直接访问组件的任意数据和方法。
+
+歌曲播放会调用 backgroundAudioManager.onTimeUpdate（）， 在这个函数中 向外派发自定义事件‘timeUpdate’，携带参数为当前正在播放的时间currentTime,
+父组件接收到‘timeUpdate’时，调用歌词子组件的 update方法   传入参数 currentTime
+比较currentTime 与 当前歌词的时间 来高亮和向上滚动
+
+
+
+当前正在播放的歌词高亮 歌词整体随着播放进度向上滚动
+
+```
+lyric.js : 
+<!-- 一行歌词所占的高度 -->
+let lyricHeight = 0
+lifetimes: {
+  ready() {
+    wx.getSystemInfo({
+      success(res) {
+        <!-- 60rpx在不同机型下实际的px -->
+        lyricHeight: res.screenWidth / 750 * 60
+      }
+    })
+  }
+},
+methods: {
+  update(currentTime) {
+   let lrcList = this.data.lrcList
+   if(lrcList.length==0) {
+     return
+   }
+   <!-- 如果实际歌曲的时间比歌词文件中的时间长的话 -->
+   if(currentTime>lrcList[lrcList.length-1].time) {
+     if(this.data.nowLyricIndex!=-1) {
+       this.setData({
+         nowLyricIndex: -1,
+         scrollTop: lrcList.length* lycicHeight
+       })
+     }
+   }
+   for(let i=0;i<lrcList.length;i++) {
+     if(current<= lrcList[i].time) {
+       this.setData({
+         nowLyricIndex:i-1,
+         scrollTop: (i-1)*lyricHeight
+       })
+       break
+     }
+   }
+  }
+}
+
+
+```
+
+
+
+
+
+
+
+
+

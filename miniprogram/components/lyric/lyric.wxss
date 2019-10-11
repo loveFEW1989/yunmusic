@@ -1,6 +1,7 @@
 .lyric-scroll {
   width: 100%;
   height: 70%;
+  padding-top:30rpx;
   color: #ccc;
   font-size: 32rpx;
 }
@@ -9,7 +10,7 @@
   top: 50%;
 }
 .lyric{
-  min-height:  64rpx;
+  min-height:  60rpx;
 }
 .highlight-lyric{
   color: #d43c33

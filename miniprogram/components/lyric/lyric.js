@@ -1,4 +1,7 @@
 // components/lyric/lyric.js
+// 一行歌词所占的高度
+let lyricHeight = 0
+
 Component({
   /**
    * 组件的属性列表
@@ -18,7 +21,8 @@ Component({
           lrcList: [{
             lrc,
             time:0
-          }]
+          }],
+          nowLyricIndex: -1
         })
       } else {
         this._parseLyric(lrc)
@@ -33,11 +37,38 @@ Component({
    nowLyricIndex: 0, //当前正在播放的歌词索引
    scrollTop: 0, //滚动条滚动的高度
   },
+  
+  lifetimes: {
+    ready() {
+      wx.getSystemInfo({
+        success: function(res) {
+          // res.screenWidth /750可以求出1rpx 实际等于多少px
+          lyricHeight = res.screenWidth / 750 * 60
+        }
+      })
+    }
+  },
 
   /**
    * 组件的方法列表
    */
   methods: {
+    update(currentTime) {
+      console.log(currentTime)
+      let lrcList = this.data.lrcList
+      if(lrcList.length ==0) {
+        return 
+      }
+      for(let i=0; i<lrcList.length;i++) {
+        if(currentTime<=lrcList[i].time) {
+          this.setData({
+            nowLyricIndex: i-1,
+            scrollTop: (i-1)* lyricHeight
+          })
+          break;
+        }
+      }
+    },
     // 解析歌词
    _parseLyric(sLyric) {
     //  换行显示

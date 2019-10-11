@@ -125,7 +125,11 @@ Page({
    }
    this.setData({isPlaying:!this.data.isPlaying})
   },
-  
+  // 把当前播放时间传递给 歌词组件
+  timeUpdate(event) {
+   this.selectComponent('.lyric').update(event.detail.currentTime)
+  },
+
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
