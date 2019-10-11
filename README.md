@@ -627,9 +627,113 @@ methods: {
 
 
 ```
+###完善播放页三个细节：
+1，用控制器 点击上一首 或 下一首后 ，再返回歌单列表时，当前高亮的还是第一次点击的歌曲
+思路：使用全局属性，来保存当前的歌曲id，每次调用歌曲播放的网络请求时，都把当前id赋值给全局id, 每当退出播放页面时，高亮全局id对应的歌曲名。
+
+```
+app.js:
+
+......
+   this.globalData = {
+      playingMusicId: -1
+
+    }
+  设置新值
+  setPlayingMusicId(musicid) {
+    this.globalData.playingMusicId = musicid
+  }, 
+  读取值
+  getPlayingMusicId() {
+    return this.globalData.playingMusicId
+  }
+player.js: 
+
+const app = getApp()
+
+_loadMusicDetail(){
+
+ ......
+  app.setPlayingMusicId(musicId)
+   
+}
+
+components/musiclist  musiclist.js:
+
+pageLifetimes: {
+    show() {
+      this.setData({
+        playingId: parseInt(app.getPlayingMusicId())
+      })
+    }
+},
 
 
 
+```
+
+
+
+
+2，歌曲播放到一半暂停，返回页面，重新进来，歌曲会重新播放
+
+page/player页面中设置一个属性 isSame 来判断当前正在播放的歌曲与当前页面的歌曲是否是同一首，如果是同一首，不需要设置src值，直接继续播放，如果不是则设置src,重新播放
+
+player.js:
+
+```
+data: {isSame: fale},
+ _loadMusicDetail(musicId) {
+
+ if(musicId == app.getPlayingMusicId()) {
+      this.setData({
+        isSame: true
+      })
+    } else {
+      this.setData({
+       isSame: false
+      })
+  }
+
+  if(!this.data.isSame) {
+      backgroundAM.stop()
+  }
+  .........
+  if(!this.data.isSame) {
+        backgroundAM.src = result.data[0].url
+        backgroundAM.title = music.name
+        backgroundAM.coverImgUrl = music.al.picUrl
+        backgroundAM.singer = music.ar[0].name
+        backgroundAM.epname = music.ar.name
+  }
+
+
+ }
+
+```
+
+
+
+3，对于没有权限播放的歌曲的处理
+
+```
+player.js:
+_loadMusicDetail(musicId) {
+.......
+wx.cloud.callFunction({
+  ......
+}).then((res)=>{ 
+  let result = JSON.parse(res.result)
+  if(result.data[0].url== null) {
+  wx.showToasT({
+    title: '该歌曲无播放权限'
+  })
+  return
+}
+})
+
+}
+```
 
 
 

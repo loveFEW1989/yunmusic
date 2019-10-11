@@ -23,14 +23,25 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
-  console.log(options)
-  console.log('... onload ...')
+  
   nowPlayingIndex = options.index
   musiclist = wx.getStorageSync('musiclist')
   this._loadMusicDetail(options.musicId)
-  this.togglePlaying()
+  
   },
   _loadMusicDetail(musicId) {
+    if(musicId == app.getPlayingMusicId()) {
+      this.setData({
+        isSame: true
+      })
+    } else {
+      this.setData({
+       isSame: false
+      })
+    }
+    if(!this.data.isSame) {
+      backgroundAM.stop()
+    }
     let music = musiclist[nowPlayingIndex]
     wx.setNavigationBarTitle({
       title: music.name
@@ -128,6 +139,12 @@ Page({
   // 把当前播放时间传递给 歌词组件
   timeUpdate(event) {
    this.selectComponent('.lyric').update(event.detail.currentTime)
+  },
+  onPlay() {
+   this.setData({isPlaying: true})
+  },
+  onPause() {
+   this.setData({isPlaying: false})
   },
 
   /**
