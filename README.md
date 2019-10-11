@@ -397,7 +397,7 @@ html:
 <progress stroke-width="4" backgroundColor="#969696"
     activeColor="#fff" percent="{{progress}}"></progress>
 
-```
+
 相关Js文件：
 
 let movableAreaWidth = 0 // 可拖动区域外部元素 也就是进度条的宽
@@ -506,10 +506,6 @@ methods: {
     return time<10 ? '0'+time : time
   }
 }
-
-
-
-
 
 
 ```
