@@ -288,6 +288,7 @@ exports.main = async(cevent,context) => {
 
 ### 控制面板 实现 （播放歌曲 暂停 上一首 下一首）
 html文件：
+
 ```
 <view class="control">
     <text class="iconfont icon-shangyishoushangyige" bind:tap="onPrev"></text>
@@ -296,6 +297,7 @@ html文件：
 </view>
 
 ```
+
 相关js文件：
 
 ```
@@ -505,7 +507,7 @@ methods: {
   }
 }
 
-```
+
 
 
 
