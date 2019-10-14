@@ -21,9 +21,7 @@ Page({
    this.setData({blogId:options.blogId})
    this._getBlogDetail()
   },
-  scroll(e) {
-    console.log(e)
-  },
+ 
   _getBlogDetail() {
    wx.showLoading({
     titleL:'加载中...',

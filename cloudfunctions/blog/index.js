@@ -26,10 +26,16 @@ exports.main = async (event, context) => {
        })
      }
    }
-   ctx.body = await blogCollection.where(w).skip(event.start).limit(event.count)
+   const countResult = await blogCollection.count()
+   const total = countResult.total
+   let blogList = await blogCollection.where(w).skip(event.start).limit(event.count)
    .orderBy('createTime','desc').get().then((res)=> {
      return res.data
    })
+   ctx.body = {
+     blogList,
+     total
+   }
  })
 //  博客详情
 app.router('detail',async(ctx,next) => {

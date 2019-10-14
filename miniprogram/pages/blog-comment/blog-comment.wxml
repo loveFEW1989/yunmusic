@@ -6,7 +6,8 @@
 <view class="line"></view>
 <view class="comments">
    <view class="title">评论列表</view>
-  <block wx:for="{{comments}}" wx:key="_id">
+   
+  <block wx:if="{{comments.length}}" wx:for="{{comments}}" wx:key="_id">
     <view class="item">
      <view class="info">
       <image class="avatar" src="{{item.avatarUrl}}"></image>
@@ -18,6 +19,7 @@
   
     </view>
  </block>
+ <view class="noResult" hidden="{{comments.length>0}}" >暂无评论</view>
     
 </view>
 </scroll-view>

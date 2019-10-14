@@ -1,5 +1,6 @@
 // miniprogram/pages/blog/blog.js
 // 查询关键字
+let total = 0
 let keyword = ''
 Page({
 
@@ -40,7 +41,7 @@ Page({
   },
   loginFail() {
    wx.showModal({
-     title:'授权后才能发布',
+     title:'授权才能发布',
      content: ''
    })
   },
@@ -55,25 +56,29 @@ Page({
   },
   _getBlogList(start=0) {
     wx.showLoading({
-      title:'加载最新博客...'
+      title:'加载博客...'
     })
-  wx.cloud.callFunction({
-    name:'blog',
-    data: {
-      keyword,
-      $url:'list',
-      start,
-      count:10
-    }
-  }).then((res)=> {
-    console.log(res)
-    wx.hideLoading()
-    this.setData({
-      blogList:this.data.blogList.concat(res.result)
+  
+    wx.cloud.callFunction({
+      name:'blog',
+      data: {
+        keyword,
+        $url:'list',
+        start,
+        count:10
+      }
+    }).then((res)=> {
+      total = res.result.total
+      
+      console.log(res)
+      wx.hideLoading()
+      this.setData({
+        blogList:this.data.blogList.concat(res.result.blogList)
+      })
+    }).catch(err=> {
+     wx.hideLoading()
     })
-  }).catch(err=> {
-   wx.hideLoading()
-  })
+  
   },
 
   // 跳转到博客详情评价页
@@ -134,18 +139,29 @@ Page({
    * 页面相关事件处理函数--监听用户下拉动作
    */
   onPullDownRefresh: function () {
-   this.setData({
-     blogList:[]
-   })
-   this._getBlogList(0)
+    
+   
+      this.setData({
+        blogList:[]
+      })
+      this._getBlogList(0)
+   
+  
   },
 
   /**
    * 页面上拉触底事件的处理函数
    */
   onReachBottom: function () {
-    this._getBlogList(this.data.blogList.length)
-  },
+    console.log(this.data.blogList.length)
+    console.log(total)
+    if(this.data.blogList.length<total){
+      this._getBlogList(this.data.blogList.length)
+    }else {
+      wx.showToast({title:'没有更多数据'})
+      return 
+    }
+ },
 
   /**
    * 用户点击右上角分享
