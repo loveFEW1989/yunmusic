@@ -1,0 +1,52 @@
+page{background-color:#fff}
+.container{
+  position: absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:105rpx;
+  
+  background-color:#fff
+}
+.blog-ctrl{
+  position: fixed;
+  width:100%;
+  height:95rpx;
+  bottom:0;
+  left:0;
+  z-index:99;
+  border-top: 2rpx solid rgba(0,0,0,.2)
+}
+.line{
+  background:#f1f1f1;
+  width:100%;
+  height:20rpx;
+}
+.comments{
+  margin-top:20rpx;
+  
+
+}
+
+.title{
+  height:80rpx;
+  line-height: 80rpx;
+  padding:0 20rpx;
+
+}
+.item{
+  padding: 20rpx;
+  border-bottom: 2rpx solid rgba(0,0,0,.2);
+  
+}
+.info{
+  display: flex;
+  align-items: center;
+}
+.avatar{
+  width: 64rpx;
+  height:64rpx;
+  border-radius: 50%;
+  margin-right:20rpx;
+}
+.name{flex:1}

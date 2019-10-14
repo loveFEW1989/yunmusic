@@ -1,3 +1,10 @@
 {
-  "usingComponents": {}
+  "usingComponents": {
+    "x-search": "/components/search/search",
+    "x-blogcard": "/components/blog-card/blog-card",
+    "x-blogctrl":"/components/blog-ctrl/blog-ctrl",
+    "x-login": "/components/login/login"
+    
+  },
+  "enablePullDownRefresh": true
 }
